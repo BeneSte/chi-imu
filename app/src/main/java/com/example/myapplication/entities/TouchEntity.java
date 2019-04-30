@@ -2,12 +2,17 @@ package com.example.myapplication.entities;
 
 import android.provider.BaseColumns;
 
+import com.example.myapplication.entities.interfaces.IJsonConvertable;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = TouchEntity.TABLE_NAME)
-public class TouchEntity {
+public class TouchEntity implements IJsonConvertable {
 
     public static final String TABLE_NAME = "touches";
     public static final String COLUMN_ID = BaseColumns._ID;
@@ -17,7 +22,6 @@ public class TouchEntity {
     public static final String COLUMN_X = "x";
     public static final String COLUMN_Y = "y";
     public static final String COLUMN_PRESSURE = "pressure";
-    public static final String COLUMN_SYNCED = "synced";
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(index = true, name = COLUMN_ID)
@@ -39,19 +43,24 @@ public class TouchEntity {
     private int yCoord;
 
     @ColumnInfo(name = COLUMN_PRESSURE)
-    private double pressure;
+    private float pressure;
 
-    @ColumnInfo(name = COLUMN_SYNCED)
-    private boolean synced;
 
-    public TouchEntity(int fingerID, String type, int x, int y, double pressure){
+    public TouchEntity(int fingerID, String type, int xCoord, int yCoord, float pressure){
         this.time = System.currentTimeMillis();
         this.fingerID = fingerID;
         this.type = type;
-        this.xCoord = x;
-        this.yCoord = y;
+        this.xCoord = xCoord;
+        this.yCoord = yCoord;
         this.pressure = pressure;
-        this.synced = false;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public long getTime() {
@@ -78,35 +87,45 @@ public class TouchEntity {
         this.type = type;
     }
 
-    public int getxCoord() {
+    public int getXCoord() {
         return xCoord;
     }
 
-    public void setxCoord(int xCoord) {
+    public void setXCoord(int xCoord) {
         this.xCoord = xCoord;
     }
 
-    public int getyCoord() {
+    public int getYCoord() {
         return yCoord;
     }
 
-    public void setyCoord(int yCoord) {
+    public void setYCoord(int yCoord) {
         this.yCoord = yCoord;
     }
 
-    public double getPressure() {
+    public float getPressure() {
         return pressure;
     }
 
-    public void setPressure(double pressure){
+    public void setPressure(float pressure){
         this.pressure = pressure;
     }
 
-    public boolean isSynced() {
-        return synced;
-    }
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("id", id);
+            jsonObject.put("time",getTime());
+            jsonObject.put("fingerID", getFingerID());
+            jsonObject.put("type", getType());
+            jsonObject.put("touchX", getXCoord());
+            jsonObject.put("touchY", getYCoord());
+            jsonObject.put("pressure", getPressure());
+        } catch (JSONException e) {
+            throw new RuntimeException("Error when converting to JSON");
+        }
 
-    public void setSynced(boolean synced) {
-        this.synced = synced;
+        return jsonObject;
     }
 }

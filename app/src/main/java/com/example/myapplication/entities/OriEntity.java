@@ -2,12 +2,17 @@ package com.example.myapplication.entities;
 
 import android.provider.BaseColumns;
 
+import com.example.myapplication.entities.interfaces.IJsonConvertable;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = OriEntity.TABLE_NAME)
-public class OriEntity {
+public class OriEntity implements IJsonConvertable {
 
     public static final String TABLE_NAME = "orientation";
     public static final String COLUMN_ID = BaseColumns._ID;
@@ -43,6 +48,10 @@ public class OriEntity {
         this.oriZ = oriZ;
         this.oriW = oriW;
     }
+
+    public long getId() { return id;  }
+
+    public void setId(long id) { this.id = id; }
 
     public long getTime() {
         return time;
@@ -84,4 +93,20 @@ public class OriEntity {
         this.oriW = oriW;
     }
 
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("id", id);
+            jsonObject.put("time",getTime());
+            jsonObject.put("oriX", getOriX());
+            jsonObject.put("oriY", getOriY());
+            jsonObject.put("oriZ", getOriZ());
+            jsonObject.put("oriW", getOriW());
+        } catch (JSONException e) {
+            throw new RuntimeException("Error when converting to JSON");
+        }
+
+        return jsonObject;
+    }
 }

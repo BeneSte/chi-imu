@@ -12,7 +12,7 @@ import androidx.room.Query;
 @Dao
 public interface TouchDao{
 
-    @Query("SELECT * FROM " + TouchEntity.TABLE_NAME + " WHERE " + TouchEntity.COLUMN_SYNCED + " = 0 ORDER BY " + TouchEntity.COLUMN_ID + " ASC LIMIT :limit")
+    @Query("SELECT * FROM " + TouchEntity.TABLE_NAME + " ORDER BY " + TouchEntity.COLUMN_ID + " ASC LIMIT :limit")
     List<TouchEntity> getTouchesForSync(int limit);
 
     @Insert
