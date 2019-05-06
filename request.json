@@ -1,0 +1,80 @@
+{
+	"uuid": "asdf-asdf-asdf",
+	"accEntities": [
+		{
+			"id": 1234,
+			"time": 123123123,
+			"accX": 0.23423,
+			"accY": 0.52352,
+			"accZ": 0.2562354
+		},{
+			"id": 7356,
+			"time": 12351435,
+			"accX": 0.285672,
+			"accY": 0.1346,
+			"accZ": 0.13734
+		}
+	],
+	"gyroEntities": [
+		{
+			"id": 354,
+			"time": 8925389,
+			"gyroX": 0.213461,
+			"gyroY": 0.27544356,
+			"gyroZ": 0.1325813
+		},{
+			"id": 4358,
+			"time": 247247,
+			"gyroX": 0.1634513,
+			"gyroY": 0.957894,
+			"gyroZ": 0.363546
+		}
+	],
+	"oriEntities": [
+		{
+			"id": 256,
+			"time": 1345137,
+			"oriX": 0.134626243,
+			"oriY": 0.245624356,
+			"oriZ": 0.24352435,
+			"oriW": 0.2189476
+		},{
+			"id": 4856,
+			"time": 26745173,
+			"oriX": 0.14351346,
+			"oriY": 0.986756,
+			"oriZ": 0.14234,
+			"oriW": 0.386264
+		}
+	],
+	"touchEntities": [
+		{
+			"id": 123,
+			"time": 129387192,
+			"fingerID": 1,
+			"type": "asdf",
+			"touchX": 232,
+			"touchY": 1457,
+			"pressure": 0.2352
+		},{
+			"id": 456,
+			"time": 129387192,
+			"fingerID": 1,
+			"type": "asdf",
+			"touchX": 232,
+			"touchY": 1457,
+			"pressure": 0.2352
+		}
+	],
+	"activityEntities": [
+		{
+			"id": 12,
+			"time": 431089,
+			"type": 42
+		},{
+			"id": 14,
+			"time": 431084,
+			"type": 4
+		}
+	]
+}
