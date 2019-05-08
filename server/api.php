@@ -7,7 +7,7 @@ CREATE TABLE acc (
     time INT NOT NULL,
     accX FLOAT NOT NULL,
     accY FLOAT NOT NULL,
-    axxZ FLOAT NOT NULL
+    accZ FLOAT NOT NULL
 );
 
 CREATE TABLE gyro (
@@ -76,50 +76,68 @@ if($db->connect_error) {
 }
 
 $acc_stmt = $db->prepare('INSERT INTO acc (uuid, id, time, accX, accY, accZ) VALUES (?, ?, ?, ?, ?, ?)');
-if(!$acc_stmt) {
-    die('error (acc)');
-}
+if(!$acc_stmt) {die('error (acc)');}
 
 $activity_stmt = $db->prepare('INSERT INTO activity (uuid, id, time, type) VALUES (?, ?, ?, ?)');
-if(!$activity_stmt) {
-    die('error (activity)');
-}
+if(!$activity_stmt) {die('error (activity)');}
 
 $gyro_stmt = $db->prepare('INSERT INTO gyro (uuid, id, time, gyroX, gyroY, gyroZ) VALUES (?, ?, ?, ?, ?, ?)');
-if(!$gyro_stmt) {
-    die('error (gyro)');
-}
+if(!$gyro_stmt) {die('error (gyro)');}
 
 $ori_stmt = $db->prepare('INSERT INTO ori (uuid, id, time, oriX, oriY, oriZ, oriW) VALUES (?, ?, ?, ?, ?, ?, ?)');
-if(!$ori_stmt) {
-    die('error (ori)');
-}
+if(!$ori_stmt) {die('error (ori)');}
 
 $touch_stmt = $db->prepare('INSERT INTO touch (uuid, id, time, fingerID, type, touchX, touchY, pressure) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-if(!$touch_stmt) {
-    die('error (touch)');
-}
+if(!$touch_stmt) {die('error (touch)');}
 
-$lines = explode("\n", trim($body));
-echo $lines;
+$lines = trim($body);
+$json = json_decode($lines, true);
 
-for($i = 0; $i < count($lines); $i++) {
-    $line = $lines[$i];
-    list($local_id, $local_time, $content) = explode("\t", $line, 3);
+$uuid = $json['uuid'];
 
-    $json = json_decode($content, true);
-    if($json === null) {
-        continue;
-    }
+$accEntities = $json['accEntities'];
+$gyroEntities = $json['gyroEntities'];
+$oriEntities = $json['oriEntities'];
+$touchEntities = $json['touchEntities'];
+$activityEntities = $json['activityEntities'];
 
-    $uuid = $json['uuid'];
-    $acc_stmt->bind_param('isiis', $version, $uuid, $local_id, $local_time, $content);
+foreach($accEntities as $item) {
+    if($item === null) {continue;}
+    $acc_stmt->bind_param("siiddd", $uuid, $item['id'], $item['time'], $item['accX'], $item['accY'], $item['accZ']);
     $acc_stmt->execute();
 }
-
 $acc_stmt->close();
+
+
+foreach($gyroEntities as $item) {
+    if($item === null) {continue;}
+    $gyro_stmt->bind_param("siiddd", $uuid, $item['id'], $item['time'], $item['gyroX'], $item['gyroY'], $item['gyroZ']);
+    $gyro_stmt->execute();
+}
+$gyro_stmt->close();
+
+foreach($oriEntities as $item) {
+    if($item === null) {continue;}
+    $ori_stmt->bind_param("siidddd", $uuid, $item['id'], $item['time'], $item['oriX'], $item['oriY'], $item['oriZ'], $item['oriW']);
+    $ori_stmt->execute();
+}
+$ori_stmt->close();
+
+foreach($touchEntities as $item) {
+    if($item === null) {continue;}
+    $touch_stmt->bind_param("siiisiid", $uuid, $item['id'], $item['time'], $item['fingerID'], $item['type'], $item['touchX'], $item['touchY'], $item['pressure']);
+    $touch_stmt->execute();
+}
+$touch_stmt->close();
+
+foreach($activityEntities as $item) {
+    if($item === null) {continue;}
+    $activity_stmt->bind_param("siis", $uuid, $item['id'], $item['time'], $item['type']);
+    $activity_stmt->execute();
+}
+$activity_stmt->close();
+
 $db->close();
 
 echo 'ok';
-
 ?>
