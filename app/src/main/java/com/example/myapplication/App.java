@@ -17,7 +17,7 @@ public class App extends Application {
             public void run() {
                 try {
                     JobManager.create(App.this).addJobCreator(new Creator());
-                    SyncJob.doSync(getApplicationContext());
+                    SyncJob.scheduleJob();
                 }catch (Exception e){
                     if (Const.DEBUG) e.printStackTrace();
                 }

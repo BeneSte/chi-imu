@@ -9,16 +9,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
 import com.example.myapplication.entities.TouchEntity;
-import com.example.myapplication.misc.Const;
+import com.example.myapplication.interfaces.IDisplayStateObserver;
+import com.example.myapplication.misc.DisplayUtil;
+import com.example.myapplication.misc.KeyboardUtil;
+import com.example.myapplication.interfaces.IKeyboardStateObserver;
+import com.example.myapplication.misc.interfaces.IUpdateDisplayState;
+import com.example.myapplication.misc.interfaces.IUpdateKeyboardState;
 import com.example.myapplication.tasks.Sensors;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IKeyboardStateObserver, IDisplayStateObserver {
 
     private TextView xTextView;
     private TextView yTextView;
@@ -26,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout layout;
     private RelativeLayout layout2;
     private String actionText;
+    private TextView keyboardText;
+    private IUpdateKeyboardState keyboardUtil;
+    private IUpdateDisplayState displayUtil;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,7 +44,14 @@ public class MainActivity extends AppCompatActivity {
         layout2 = findViewById(R.id.super_layout);
         xTextView = findViewById(R.id.X_coord);
         yTextView = findViewById(R.id.Y_coord);
+        keyboardText = findViewById(R.id.keyboardText);
         actionTextView = findViewById(R.id.action_text);
+
+        keyboardUtil = KeyboardUtil.getInstance(getApplicationContext());
+        keyboardUtil.registerObserver(this);
+
+        displayUtil = DisplayUtil.getInstance(getApplicationContext());
+        displayUtil.registerObserver(this);
 
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         Sensors s = new Sensors(this.getApplicationContext());
@@ -83,4 +97,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onKeyboardStateChanged(boolean state) {
+        if (state) {
+            keyboardText.setText("Active");
+            Log.d("KEYBOARD_STATE", "ON");
+        } else {
+            keyboardText.setText("Not Active");
+            Log.d("KEYBOARD_STATE", "OFF");
+        }
+    }
+
+    @Override
+    public void onDisplayStateChanged(boolean state) {
+        if (state) {
+            Log.d("DISPLAY_STATE", "ON");
+        } else {
+            Log.d("DISPLAY_STATE", "OFF");
+        }
+    }
 }

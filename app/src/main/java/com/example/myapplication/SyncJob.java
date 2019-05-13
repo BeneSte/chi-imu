@@ -2,7 +2,6 @@ package com.example.myapplication;
 
 import androidx.annotation.NonNull;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.evernote.android.job.Job;
@@ -15,16 +14,18 @@ import com.example.myapplication.entities.TouchEntity;
 import com.example.myapplication.entities.interfaces.IJsonConvertable;
 import com.example.myapplication.misc.Const;
 import com.example.myapplication.misc.NetworkUtil;
+import com.example.myapplication.tasks.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import androidx.room.Room;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -37,6 +38,7 @@ public class SyncJob extends Job {
     public static final String TAG = "sync_tag";
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final int LIMIT = 20;
+    public final int jobRounds = 1000;
 
     static List<AccEntity> accEntities;
     static List<GyroEntity> gyroEntities;
@@ -54,85 +56,98 @@ public class SyncJob extends Job {
         }
 
         Log.w("OnRunJob", "No failure");
-        //doSync();
+        doSync();
         return Result.SUCCESS;
     }
 
 
     public static void scheduleJob(){
+
         if (Const.DEBUG) Log.i(TAG, "Schedule job: " + TAG);
         new JobRequest.Builder(SyncJob.TAG)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15))
-                .setRequiredNetworkType(JobRequest.NetworkType.METERED)
+                .setRequiredNetworkType(JobRequest.NetworkType.UNMETERED)
                 .setRequiresBatteryNotLow(true)
                 .setUpdateCurrent(true)
                 .build()
                 .schedule();
-
     }
 
-    public static void doSync(Context context) {
+    public void doSync(){
         Log.d(TAG, "starting sync");
-        AppDatabase db = AppDatabase.getInstance(context);
-        accEntities = db.accDao().getAccForSync(LIMIT);
-        gyroEntities = db.gyroDao().getGyroForSync(LIMIT);
-        oriEntities = db.oriDao().getOrisForSync(LIMIT);
-        touchEntities = db.touchDao().getTouchesForSync(LIMIT);
-        activityEntities = db.activityDao().getActivityForSync(LIMIT);
 
-        if(accEntities.isEmpty() && gyroEntities.isEmpty() && oriEntities.isEmpty() && touchEntities.isEmpty() && activityEntities.isEmpty()) {
-            return;
-        }
+        AppDatabase db = AppDatabase.getInstance(getContext());
+        for (int i = 0; i<jobRounds; i++) {
+            Log.d(TAG, "Run: "+i);
+            accEntities = db.accDao().getAccForSync(LIMIT);
+            gyroEntities = db.gyroDao().getGyroForSync(LIMIT);
+            oriEntities = db.oriDao().getOrisForSync(LIMIT);
+            touchEntities = db.touchDao().getTouchesForSync(LIMIT);
+            activityEntities = db.activityDao().getActivityForSync(LIMIT);
 
-        JSONObject syncJson = new JSONObject();
+            if (accEntities.isEmpty() && gyroEntities.isEmpty() && oriEntities.isEmpty() && touchEntities.isEmpty() && activityEntities.isEmpty()) {
+                Log.d(TAG, "entities empty");
+                return;
+            }
 
-        addListToJsonObject(syncJson, "accEntities", accEntities);
-        addListToJsonObject(syncJson, "gyroEntities", gyroEntities);
-        addListToJsonObject(syncJson, "oriEntities", oriEntities);
-        addListToJsonObject(syncJson, "touchEntities", touchEntities);
-        addListToJsonObject(syncJson, "activityEntities", activityEntities);
+            List myList = new ArrayList();
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .retryOnConnectionFailure(false)
-                .build();
-        RequestBody body = RequestBody.create(JSON, syncJson.toString());
-        Request request = new Request.Builder()
-                .url(Const.SERVER_URL)
-                .post(body)
-                .build();
-        Response response = null;
-        Log.d(TAG, "response = zero, trying to request");
-        try {
-            response = client.newCall(request).execute();
-        } catch (IOException e){
-            if(Const.DEBUG) e.printStackTrace();
-        }
-        Log.d(TAG, "tried requesting");
-        if(response != null && response.isSuccessful()) {
-            Log.d(TAG, "response successful");
-            ResponseBody responseBody = response.body();
-            if(responseBody != null) {
-                String responseString = null;
-                try {
-                    responseString = responseBody.string();
-                } catch (IOException e) {
-                    if(Const.DEBUG) e.printStackTrace();
-                }
-                if(Const.DEBUG) {
-                    Log.d(TAG,"Response: " + responseString);
-                }
-                /*if("ok".equals(responseString)) {
-                    try{
-                        deleteFields(db);
-                    }catch (Exception e) {
+            JSONObject syncJson = new JSONObject();
+
+            Log.d(TAG, "filling json object");
+
+
+            addStringToJsonObject(syncJson, "uuid", UUID.getUUID(getContext()));
+            addListToJsonObject(syncJson, "accEntities", accEntities);
+            addListToJsonObject(syncJson, "gyroEntities", gyroEntities);
+            addListToJsonObject(syncJson, "oriEntities", oriEntities);
+            addListToJsonObject(syncJson, "touchEntities", touchEntities);
+            addTestListToJsonObject(syncJson, "activityEntities", myList);
+
+            Log.d(TAG, "filled json object");
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .retryOnConnectionFailure(false)
+                    .build();
+            RequestBody body = RequestBody.create(JSON, syncJson.toString());
+            Request request = new Request.Builder()
+                    .url(Const.SERVER_URL)
+                    .post(body)
+                    .build();
+            Response response = null;
+            Log.d(TAG, "trying to request");
+            try {
+                response = client.newCall(request).execute();
+            } catch (IOException e) {
+                if (Const.DEBUG) e.printStackTrace();
+            }
+            Log.d(TAG, "tried requesting");
+            if (response != null && response.isSuccessful()) {
+                Log.d(TAG, "response successful");
+                ResponseBody responseBody = response.body();
+                if (responseBody != null) {
+                    String responseString = null;
+                    try {
+                        responseString = responseBody.string();
+                    } catch (IOException e) {
                         if (Const.DEBUG) e.printStackTrace();
                     }
-                }*/
+                    if (Const.DEBUG) {
+                        Log.d(TAG, "Response: " + responseString);
+                    }
+                    try {
+                        deleteFields(db);
+                        Log.d(TAG, "Deleting fields");
+                    } catch (Exception e) {
+                        if (Const.DEBUG) e.printStackTrace();
+                    }
+
+                }
             }
         }
     }
 
-    private void deleteFields(AppDatabase db) {
+    private static void deleteFields(AppDatabase db) {
         db.accDao().deleteAccs(accEntities);
         db.gyroDao().deleteGyros(gyroEntities);
         db.oriDao().deleteOris(oriEntities);
@@ -143,6 +158,24 @@ public class SyncJob extends Job {
     private static void addListToJsonObject(JSONObject syncJson, String key, List<? extends IJsonConvertable> convertableList) {
         try {
             syncJson.put(key, listToJsonArray(convertableList));
+        } catch (Exception e) {
+            System.err.println("Error when trying to convert "+key+ " to json array.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void addTestListToJsonObject(JSONObject syncJson, String key, List convertableList) {
+        try {
+            syncJson.put(key, listToJsonArray(convertableList));
+        } catch (Exception e) {
+            System.err.println("Error when trying to convert "+key+ " to json array.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void addStringToJsonObject(JSONObject syncJson, String key, String value){
+        try {
+            syncJson.put(key, value);
         } catch (Exception e) {
             System.err.println("Error when trying to convert "+key+ " to json array.");
             e.printStackTrace();

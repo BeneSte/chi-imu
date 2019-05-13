@@ -6,7 +6,7 @@
     <LinearLayout
         android:id="@+id/parent_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
         <TextView
             android:id="@+id/X_text"
             android:layout_width="wrap_content"
@@ -53,5 +53,29 @@
             android:layout_height="wrap_content"
             android:layout_alignRight="@+id/action"
             android:text="Test" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/keyboardTextLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/parent_layout">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text = "Keyboard : "/>
+        <TextView
+            android:id = "@+id/keyboardText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Not Active"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/keyboardTextLayout">
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Try Entering Stuff"/>
     </LinearLayout>
 </RelativeLayout>
